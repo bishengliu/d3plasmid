@@ -6,7 +6,7 @@ function Plasmid(){
     var id = '',
         name = '',
         sequence ='',
-        showEnzyme = false,
+        showEnzyme = true,
         features = [],
         enzymes = [];
     //generate complementary sequence
@@ -17,8 +17,17 @@ function Plasmid(){
     var padding = 10;
 
     //need to set other global variables
+    //outer: only emzymes
+    var r_enzy = genRatioVal((width + 2*padding), 2500, 30, 100); // will be updated later
+       //inner and over circle: features
+    var r_plasmid = width/2 - r_enzy;
+    var r_plasmid_padding = genRatioVal((width + 2*padding), 2500, 2, 10);
+    var twoPi = 2* Math.PI;
 
-
+    //show enzyme cut numbers
+    var cuts_number = 2;
+    //length of the enzyme cut
+    var cut_length = 30;
 
     //read the data 
     this.read = function(json){
@@ -36,6 +45,12 @@ function Plasmid(){
         //get the width for svg
         width = $(id).width() - padding * 2; //padding on each side
         width = width < 250 ? 250 : width;
+
+        //     //outer: only emzymes
+        r_enzy = genRatioVal((width + 2*padding), 2500, 30, 100); // will be updated later
+        //inner and over circle: features
+        r_plasmid = width/2 - r_enzy;
+        r_plasmid_padding = genRatioVal((width + 2*padding), 2500, 2, 10);
     }
 
 
@@ -45,7 +60,11 @@ function Plasmid(){
         var svg = drawSVG(id, width, padding);
 
         //draw plasmid
-        var plasmid = drawPlasmid(svg, id, width, padding, name);
+        var plasmid = drawPlasmid(svg, id, width, padding, name, r_enzy, r_plasmid, r_plasmid_padding, twoPi);
+        //draw enzymes
+        if(showEnzyme){
+            drawEnzyme(svg, enzymes, cuts_number, sequence.length, width, cut_length, r_enzy, r_plasmid, r_plasmid_padding);
+        }
     }
 
     //redraw
@@ -53,11 +72,23 @@ function Plasmid(){
         $(id).empty();
         width = $(id).width() - padding * 2; //padding on each side
         width = width < 250 ? 250 : width;
+
+        //     //outer: only emzymes
+        r_enzy = genRatioVal((width + 2*padding), 2500, 30, 100); // will be updated later
+        //inner and over circle: features
+        r_plasmid = width/2 - r_enzy;
+        r_plasmid_padding = genRatioVal((width + 2*padding), 2500, 2, 10);
+
         //draw empty svg
         var svg = drawSVG(id, width, padding);
 
         //draw plasmid
-        var plasmid = drawPlasmid(svg, id, width, padding, name);
+        var plasmid = drawPlasmid(svg, id, width, padding, name, r_enzy, r_plasmid, r_plasmid_padding, twoPi);
+
+        //draw enzymes
+        if(showEnzyme){
+            drawEnzyme(svg, enzymes, cuts_number, sequence.length, width, cut_length, r_enzy, r_plasmid, r_plasmid_padding);
+        }
     }
 }
 
@@ -75,14 +106,8 @@ function Plasmid(){
     }
 
     //draw plasmid
-    function drawPlasmid(svg, id, width, padding, name){
-        //outer: only emzymes
-        var r_enzy = genRatioVal((width + 2*padding), 2500, 30, 100); // will be updated later
-       //inner and over circle: features
-       console.log([width, padding]);
-       var r_plasmid = width/2 - r_enzy;
-       var r_plasmid_padding = genRatioVal((width + 2*padding), 2500, 2, 10);
-       var twoPi = twoPi = 2* Math.PI;
+    function drawPlasmid(svg, id, width, padding, name, r_enzy, r_plasmid, r_plasmid_padding, twoPi){
+
        var arc = d3.arc()
                     .startAngle(0)
                     .endAngle(twoPi)
@@ -90,12 +115,11 @@ function Plasmid(){
                     .outerRadius(r_plasmid);
 
        var backbone = svg.append('g').attr("transform", "translate(" + (r_plasmid + r_enzy) + "," + (r_plasmid + r_enzy) + ")");
-
             //plasmid label
             backbone.append("text")
                     .attr("class", "plasmidName noEvent")
                     .attr("display", function(){
-                        return (width + 2*padding) <= 502 ? "none" : "inherit";
+                        return (width + 2*padding) <= 500 ? "none" : "inherit";
                     })
                     .attr("dy", ".35em")
                     .attr("text-anchor", "middle")
@@ -114,9 +138,74 @@ function Plasmid(){
                     .attr("fill-opacity", .5)
                     .attr("d", arc);
 
-        //draw enzyme
+        return svg;
         
     }
+
+    //draw enzymes
+    function drawEnzyme(svg, enzymes, cuts_number, totalLength, width, cut_length, r_enzy, r_plasmid, r_plasmid_padding){
+        //nest emzymes by enzyme
+        var nestedEnzymes = d3.nest()
+                              .key(function(d){return d.name.split(' ')[0];})
+                              .entries(enzymes);
+            console.log(nestedEnzymes);
+        var enzy = svg.append('g').attr("transform", "translate(" + (r_plasmid + r_enzy) + "," + (r_plasmid + r_enzy) + ")");
+        if(cuts_number == -1){
+                //draw all the cuts
+                enzymes.forEach(function(d, i){
+                //convert number to angle
+                var angles = nt2angle(+d.cut, totalLength);
+                //add cut line on plasmid backbone
+                var arc = d3.arc()
+                        .startAngle(angles[0])
+                        .endAngle(angles[1])
+                        .innerRadius(r_plasmid - r_plasmid_padding + cut_length/2)
+                        .outerRadius(r_plasmid - cut_length/2);
+                enzy.datum(d)
+                    .append("path")                
+                    .attr("stroke", "#1f77b4")
+                    .attr("stroke-width", function(){return width > 800 ? 2 : 1})
+                    .attr("fill", "#c6dbef")
+                    .attr("fill-opacity", .5)
+                    .attr("d", arc);
+                
+                //enzyme mouse events
+                enzy.on("mouseover", function(d){console.log(d);})
+                    .on("mouseout", function(d){console.log(d);});
+            })
+        }
+        else{
+            //only show the enzymes have the cuts_number
+            nestedEnzymes.forEach(function(d, i){
+                if(d.values.length == cuts_number){
+                    //loop into the enzymes
+                    d.values.forEach(function(sd, si){
+                    //convert number to angle
+                    var angles = nt2angle(+sd.cut, totalLength);
+                    var arc = d3.arc()
+                        .startAngle(angles[0])
+                        .endAngle(angles[1])
+                        .innerRadius(r_plasmid - r_plasmid_padding + cut_length/2)
+                        .outerRadius(r_plasmid - cut_length/2);
+                //draw curs
+                enzy.datum(sd)
+                    .append("path")                
+                    .attr("stroke", "#1f77b4")
+                    .attr("stroke-width", function(){return width > 800 ? 2 : 1})
+                    .attr("fill", "#c6dbef")
+                    .attr("fill-opacity", .5)
+                    .attr("d", arc);
+                
+                //enzyme mouse events
+                enzy.on("mouseover", function(d){console.log(d);})
+                    .on("mouseout", function(d){console.log(d);});
+                    })
+                }
+            })
+        }
+
+    }
+
 
     //generate complementary sequence
     function genCSeq(sequence){
@@ -212,3 +301,17 @@ function Plasmid(){
         return output;
     }
 
+
+    function angle(d) {
+        var a = (d.startAngle + d.endAngle) * 90 / Math.PI + 180;
+        return a > 90 ? a - 180 : a;
+    }
+
+    //convert nt number to angle
+    function nt2angle(pos, total){
+        //get per nt angle
+        var angle1nt = (2 * Math.PI) / total;
+        //var angle1nt = (360 / total) * (2 * Math.PI);
+        anglePos = angle1nt * pos;
+        return [anglePos, anglePos + angle1nt];
+    }
