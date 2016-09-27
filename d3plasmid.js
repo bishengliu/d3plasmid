@@ -14,11 +14,11 @@ function Plasmid(){
 
     //set the window width
     var width = 0;
-    var padding = 50;
+    var padding = 100;
 
     //need to set other global variables
     //outer: only emzymes
-    var r_enzy = genRatioVal((width + 2*padding), 2500, 30, 20); // will be updated later
+    var r_enzy = genRatioVal((width + 2*padding), 2500, 100, 250); // will be updated later
        //inner and over circle: features
     var r_plasmid = width/2 - r_enzy;
     var r_plasmid_padding = genRatioVal((width + 2*padding), 2500, 2, 10);
@@ -32,6 +32,10 @@ function Plasmid(){
     var lable_line_length = 40;
     var lable_line_distance = 40;
     var text_line_distance = 40;
+
+
+    //variables for the mouse event 
+    var selectEnzyme ="";
 
     //read the data 
     this.read = function(json){
@@ -51,15 +55,14 @@ function Plasmid(){
         width = width < 250 ? 250 : width;
 
         //     //outer: only emzymes
-        r_enzy = genRatioVal((width + 2*padding), 2500, 30, 100); // will be updated later
+        r_enzy = genRatioVal((width + 2*padding), 2500, 100, 250); // will be updated later
         //inner and over circle: features
         r_plasmid = width/2 - r_enzy;
         r_plasmid_padding = genRatioVal((width + 2*padding), 2500, 2, 10);
-
         cut_length = genRatioVal((width + 2*padding), 2500, 14, 40);
-        lable_line_length = genRatioVal((width + 2*padding), 2500, 14, 40);
-        lable_line_distance = genRatioVal((width + 2*padding), 2500, 10, 40);
-        text_line_distance = genRatioVal((width + 2*padding), 2500, 30, 50);
+        lable_line_length = genRatioVal((width + 2*padding), 2500, 10, 30);
+        lable_line_distance = genRatioVal((width + 2*padding), 2500, 20, 40);
+        text_line_distance = genRatioVal((width + 2*padding), 2500, 50, 80);
     }
 
 
@@ -72,7 +75,7 @@ function Plasmid(){
         var plasmid = drawPlasmid(svg, id, width, padding, name, r_enzy, r_plasmid, r_plasmid_padding, twoPi);
         //draw enzymes
         if(showEnzyme){
-            drawEnzyme(svg, enzymes, cuts_number, sequence.length, width, lable_line_length, lable_line_distance, text_line_distance, cut_length, r_enzy, r_plasmid, r_plasmid_padding);
+            drawEnzyme(svg, enzymes, cuts_number, sequence.length, width, lable_line_length, lable_line_distance, text_line_distance, cut_length, r_enzy, r_plasmid, r_plasmid_padding, selectEnzyme);
         }
     }
 
@@ -80,17 +83,17 @@ function Plasmid(){
     this.redraw = function(){
         $(id).empty();
         width = $(id).width() - padding * 2; //padding on each side
-        width = width < 250 ? 250 : width;
+        width = width < 500 ? 500 : width;
 
         //     //outer: only emzymes
-        r_enzy = genRatioVal((width + 2*padding), 2500, 30, 100); // will be updated later
+        r_enzy = genRatioVal((width + 2*padding), 2500, 100, 250); // will be updated later
         //inner and over circle: features
         r_plasmid = width/2 - r_enzy;
         r_plasmid_padding = genRatioVal((width + 2*padding), 2500, 2, 10);
         cut_length = genRatioVal((width + 2*padding), 2500, 14, 40);
-        lable_line_length = genRatioVal((width + 2*padding), 2500, 14, 40);
+        lable_line_length = genRatioVal((width + 2*padding), 2500, 10, 30);
         lable_line_distance = genRatioVal((width + 2*padding), 2500, 20, 40);
-        text_line_distance = genRatioVal((width + 2*padding), 2500, 30, 50);
+        text_line_distance = genRatioVal((width + 2*padding), 2500, 50, 80);
         //draw empty svg
         var svg = drawSVG(id, width, padding);
 
@@ -99,7 +102,7 @@ function Plasmid(){
 
         //draw enzymes
         if(showEnzyme){
-            drawEnzyme(svg, enzymes, cuts_number, sequence.length, width, lable_line_length, lable_line_distance, text_line_distance, cut_length, r_enzy, r_plasmid, r_plasmid_padding);
+            drawEnzyme(svg, enzymes, cuts_number, sequence.length, width, lable_line_length, lable_line_distance, text_line_distance, cut_length, r_enzy, r_plasmid, r_plasmid_padding, selectEnzyme);
         }
     }
 }
@@ -155,7 +158,7 @@ function Plasmid(){
     }
 
     //draw enzymes
-    function drawEnzyme(svg, enzymes, cuts_number, totalLength, width, lable_line_length, lable_line_distance, text_line_distance, cut_length, r_enzy, r_plasmid, r_plasmid_padding){
+    function drawEnzyme(svg, enzymes, cuts_number, totalLength, width, lable_line_length, lable_line_distance, text_line_distance, cut_length, r_enzy, r_plasmid, r_plasmid_padding, selectEnzyme){
 
         //nest emzymes by enzyme
         var nestedEnzymes = d3.nest()
@@ -176,7 +179,7 @@ function Plasmid(){
                         .startAngle(angles[0])
                         .endAngle(angles[1])
                         .innerRadius(r_plasmid - r_plasmid_padding + cut_length/2)
-                        .outerRadius(r_plasmid - cut_length/2);
+                        .outerRadius(r_plasmid);
                 var arc2 = d3.arc()
                         .startAngle(angles[0])
                         .endAngle(angles[1])
@@ -187,7 +190,7 @@ function Plasmid(){
                         .startAngle(angles[0])
                         .endAngle(angles[1])
                         .innerRadius(r_plasmid - cut_length/2 + lable_line_distance + text_line_distance)
-                        .outerRadius(r_plasmid - cut_length/2 + lable_line_length + lable_line_distance + 40);
+                        .outerRadius(r_plasmid - cut_length/2 + lable_line_length + lable_line_distance + 60);
 
                 var enzy = enzySVG.append("g").attr("class", function(){
                         return d.name.split(' ')[0];
@@ -227,10 +230,12 @@ function Plasmid(){
                                 })
                                 .style("fill", "gray")
                                 .style("font", "12px Arial")
-                                .text(function(d){return d.name.split(' ')[0];});
+                                .text(function(d){return d.name.split(' ')[0] + " (" + d.cut + ")" ;});
                      
                 //enzyme mouse events
                 enzy.on("mouseover", function(d){
+                    //update select emzymes
+                    selectEnzyme = d.name.split(' ')[0];
                     //get the line class
                     var cutClass = "."+ d.name.split(' ')[0] +"-cut";
                     d3.selectAll(cutClass).attr("stroke", "blue");
@@ -272,7 +277,7 @@ function Plasmid(){
                         .startAngle(angles[0])
                         .endAngle(angles[1])
                         .innerRadius(r_plasmid - r_plasmid_padding + cut_length/2)
-                        .outerRadius(r_plasmid - cut_length/2);
+                        .outerRadius(r_plasmid);
                 
                     var arc2 = d3.arc()
                         .startAngle(angles[0])
@@ -284,7 +289,7 @@ function Plasmid(){
                         .startAngle(angles[0])
                         .endAngle(angles[1])
                         .innerRadius(r_plasmid - cut_length/2 + lable_line_distance + text_line_distance)
-                        .outerRadius(r_plasmid - cut_length/2 + lable_line_length + lable_line_distance + 40);
+                        .outerRadius(r_plasmid - cut_length/2 + lable_line_length + lable_line_distance + 60);
 
 
                 var enzy = enzySVG.append("g").attr("class", function(){
@@ -331,6 +336,8 @@ function Plasmid(){
                                 //enzyme mouse events
                 enzy
                     .on("mouseover", function(d){
+                        //update select emzymes
+                        selectEnzyme = d.name.split(' ')[0];
                         //get the line class
                         var cutClass = "."+ d.name.split(' ')[0] +"-cut";
                         d3.selectAll(cutClass).attr("stroke", "blue");
