@@ -14,20 +14,24 @@ function Plasmid(){
 
     //set the window width
     var width = 0;
-    var padding = 10;
+    var padding = 50;
 
     //need to set other global variables
     //outer: only emzymes
-    var r_enzy = genRatioVal((width + 2*padding), 2500, 30, 100); // will be updated later
+    var r_enzy = genRatioVal((width + 2*padding), 2500, 30, 20); // will be updated later
        //inner and over circle: features
     var r_plasmid = width/2 - r_enzy;
     var r_plasmid_padding = genRatioVal((width + 2*padding), 2500, 2, 10);
     var twoPi = 2* Math.PI;
 
     //show enzyme cut numbers
-    var cuts_number = 2;
+    var cuts_number = -1;
     //length of the enzyme cut
-    var cut_length = 30;
+    var cut_length = 40;
+    //cut label line length
+    var lable_line_length = 40;
+    var lable_line_distance = 40;
+    var text_line_distance = 40;
 
     //read the data 
     this.read = function(json){
@@ -51,6 +55,11 @@ function Plasmid(){
         //inner and over circle: features
         r_plasmid = width/2 - r_enzy;
         r_plasmid_padding = genRatioVal((width + 2*padding), 2500, 2, 10);
+
+        cut_length = genRatioVal((width + 2*padding), 2500, 14, 40);
+        lable_line_length = genRatioVal((width + 2*padding), 2500, 14, 40);
+        lable_line_distance = genRatioVal((width + 2*padding), 2500, 10, 40);
+        text_line_distance = genRatioVal((width + 2*padding), 2500, 30, 50);
     }
 
 
@@ -63,7 +72,7 @@ function Plasmid(){
         var plasmid = drawPlasmid(svg, id, width, padding, name, r_enzy, r_plasmid, r_plasmid_padding, twoPi);
         //draw enzymes
         if(showEnzyme){
-            drawEnzyme(svg, enzymes, cuts_number, sequence.length, width, cut_length, r_enzy, r_plasmid, r_plasmid_padding);
+            drawEnzyme(svg, enzymes, cuts_number, sequence.length, width, lable_line_length, lable_line_distance, text_line_distance, cut_length, r_enzy, r_plasmid, r_plasmid_padding);
         }
     }
 
@@ -78,7 +87,10 @@ function Plasmid(){
         //inner and over circle: features
         r_plasmid = width/2 - r_enzy;
         r_plasmid_padding = genRatioVal((width + 2*padding), 2500, 2, 10);
-
+        cut_length = genRatioVal((width + 2*padding), 2500, 14, 40);
+        lable_line_length = genRatioVal((width + 2*padding), 2500, 14, 40);
+        lable_line_distance = genRatioVal((width + 2*padding), 2500, 20, 40);
+        text_line_distance = genRatioVal((width + 2*padding), 2500, 30, 50);
         //draw empty svg
         var svg = drawSVG(id, width, padding);
 
@@ -87,7 +99,7 @@ function Plasmid(){
 
         //draw enzymes
         if(showEnzyme){
-            drawEnzyme(svg, enzymes, cuts_number, sequence.length, width, cut_length, r_enzy, r_plasmid, r_plasmid_padding);
+            drawEnzyme(svg, enzymes, cuts_number, sequence.length, width, lable_line_length, lable_line_distance, text_line_distance, cut_length, r_enzy, r_plasmid, r_plasmid_padding);
         }
     }
 }
@@ -114,7 +126,7 @@ function Plasmid(){
                     .innerRadius(r_plasmid - r_plasmid_padding)
                     .outerRadius(r_plasmid);
 
-       var backbone = svg.append('g').attr("transform", "translate(" + (r_plasmid + r_enzy) + "," + (r_plasmid + r_enzy) + ")");
+       var backbone = svg.append('g').attr("transform", "translate(" + (r_plasmid + r_enzy) + "," + (r_plasmid + r_enzy) + ")").attr("id", "backbone");
             //plasmid label
             backbone.append("text")
                     .attr("class", "plasmidName noEvent")
@@ -143,14 +155,18 @@ function Plasmid(){
     }
 
     //draw enzymes
-    function drawEnzyme(svg, enzymes, cuts_number, totalLength, width, cut_length, r_enzy, r_plasmid, r_plasmid_padding){
+    function drawEnzyme(svg, enzymes, cuts_number, totalLength, width, lable_line_length, lable_line_distance, text_line_distance, cut_length, r_enzy, r_plasmid, r_plasmid_padding){
+
         //nest emzymes by enzyme
         var nestedEnzymes = d3.nest()
                               .key(function(d){return d.name.split(' ')[0];})
                               .entries(enzymes);
-            console.log(nestedEnzymes);
-        var enzy = svg.append('g').attr("transform", "translate(" + (r_plasmid + r_enzy) + "," + (r_plasmid + r_enzy) + ")");
+        var enzySVG = svg.append('g').attr("transform", "translate(" + (r_plasmid + r_enzy) + "," + (r_plasmid + r_enzy) + ")").attr("id", "enzyme");
         if(cuts_number == -1){
+                var pie = d3.pie()
+                    .sort(null)
+                    .value(function (d) { return +d.cut; });
+
                 //draw all the cuts
                 enzymes.forEach(function(d, i){
                 //convert number to angle
@@ -161,22 +177,92 @@ function Plasmid(){
                         .endAngle(angles[1])
                         .innerRadius(r_plasmid - r_plasmid_padding + cut_length/2)
                         .outerRadius(r_plasmid - cut_length/2);
-                enzy.datum(d)
-                    .append("path")                
+                var arc2 = d3.arc()
+                        .startAngle(angles[0])
+                        .endAngle(angles[1])
+                        .innerRadius(r_plasmid - cut_length/2 + lable_line_distance)
+                        .outerRadius(r_plasmid - cut_length/2 + lable_line_length + lable_line_distance);
+                
+                var arc3 = d3.arc()
+                        .startAngle(angles[0])
+                        .endAngle(angles[1])
+                        .innerRadius(r_plasmid - cut_length/2 + lable_line_distance + text_line_distance)
+                        .outerRadius(r_plasmid - cut_length/2 + lable_line_length + lable_line_distance + 40);
+
+                var enzy = enzySVG.append("g").attr("class", function(){
+                        return d.name.split(' ')[0];
+                    })
+                //cuts
+                var cut = enzy.datum(d)
+                    .append("path") 
+                    .attr("class", function(d){
+                        return d.name.split(' ')[0] + "-cut";
+                    })               
                     .attr("stroke", "#1f77b4")
                     .attr("stroke-width", function(){return width > 800 ? 2 : 1})
                     .attr("fill", "#c6dbef")
                     .attr("fill-opacity", .5)
                     .attr("d", arc);
-                
+                //need to add enzyme label and lines
+                var line = enzy.datum(d)
+                    .append("path")
+                    .attr("class", function(d){
+                        return d.name.split(' ')[0] + "-line";
+                    })                 
+                    .attr("stroke", "#1f77b4")
+                    .attr("stroke-width", function(){return width > 800 ? 0.5 : .25})
+                    .attr("fill", "#7f7f7f")
+                    .attr("fill-opacity", .2)
+                    .attr("d", arc2);
+
+                //add line that between cuts and ezyme label
+                var label = enzy.append("text")
+                                .attr("class", function(d){
+                                        return d.name.split(' ')[0] + "-text";
+                                    })  
+                                .attr("dy", ".35em")
+                                .attr("text-anchor", "middle")
+                                .attr("transform", function (d) {
+                                    return "translate(" + arc3.centroid(pie(+d.cut)[0]) + ")rotate(" + angle(angles) + ")";
+                                })
+                                .style("fill", "gray")
+                                .style("font", "12px Arial")
+                                .text(function(d){return d.name.split(' ')[0];});
+                     
                 //enzyme mouse events
-                enzy.on("mouseover", function(d){console.log(d);})
-                    .on("mouseout", function(d){console.log(d);});
+                enzy.on("mouseover", function(d){
+                    //get the line class
+                    var cutClass = "."+ d.name.split(' ')[0] +"-cut";
+                    d3.selectAll(cutClass).attr("stroke", "blue");
+                    //get the label class
+                    var lineClass = "."+d.name.split(' ')[0] +"-line";
+                    d3.selectAll(lineClass).attr("stroke", "blue");
+                    //get text class
+                    var textClass = "."+d.name.split(' ')[0] +"-text";
+                    d3.selectAll(textClass).style("fill", "blue").style("font", "16px Arial");
+                })
+                    .on("mouseout", function(d){
+                        //get the line class
+                    var cutClass = "."+ d.name.split(' ')[0] +"-cut";
+                    d3.selectAll(cutClass).attr("stroke", "#1f77b4");
+                    //get the label class
+                    var lineClass = "."+d.name.split(' ')[0] +"-line";
+                    d3.selectAll(lineClass).attr("stroke", "#1f77b4");
+                    //get text class
+                    var textClass = "."+d.name.split(' ')[0] +"-text";
+                    d3.selectAll(textClass).style("fill", "gray").style("font", "11px Arial");
+                    });
             })
+
         }
         else{
+            var pie = d3.pie()
+                    .sort(null)
+                    .value(function (d) { return +d.cut; });
+
             //only show the enzymes have the cuts_number
             nestedEnzymes.forEach(function(d, i){
+
                 if(d.values.length == cuts_number){
                     //loop into the enzymes
                     d.values.forEach(function(sd, si){
@@ -187,23 +273,91 @@ function Plasmid(){
                         .endAngle(angles[1])
                         .innerRadius(r_plasmid - r_plasmid_padding + cut_length/2)
                         .outerRadius(r_plasmid - cut_length/2);
+                
+                    var arc2 = d3.arc()
+                        .startAngle(angles[0])
+                        .endAngle(angles[1])
+                        .innerRadius(r_plasmid - cut_length/2 + lable_line_distance)
+                        .outerRadius(r_plasmid - cut_length/2 + lable_line_length + lable_line_distance);
+                
+                    var arc3 = d3.arc()
+                        .startAngle(angles[0])
+                        .endAngle(angles[1])
+                        .innerRadius(r_plasmid - cut_length/2 + lable_line_distance + text_line_distance)
+                        .outerRadius(r_plasmid - cut_length/2 + lable_line_length + lable_line_distance + 40);
+
+
+                var enzy = enzySVG.append("g").attr("class", function(){
+                            return sd.name.split(' ')[0];
+                        })
                 //draw curs
                 enzy.datum(sd)
-                    .append("path")                
+                    .append("path")
+                    .attr("class", function(d){
+                                        return d.name.split(' ')[0] + "-cut";
+                                    })                 
                     .attr("stroke", "#1f77b4")
                     .attr("stroke-width", function(){return width > 800 ? 2 : 1})
                     .attr("fill", "#c6dbef")
                     .attr("fill-opacity", .5)
                     .attr("d", arc);
-                
+                //need to add enzyme label and lines
+                var line = enzy.datum(sd)
+                    .append("path")
+                    .attr("class", function(d){
+                        return d.name.split(' ')[0] + "-line";
+                    })                 
+                    .attr("stroke", "#1f77b4")
+                    .attr("stroke-width", function(){return width > 800 ? 0.5 : .25})
+                    .attr("fill", "#7f7f7f")
+                    .attr("fill-opacity", .2)
+                    .attr("d", arc2);
+
+                //add line that between cuts and ezyme label
+                var label = enzy.append("text")
+                                .attr("class", function(d){
+                                        return d.name.split(' ')[0] + "-text";
+                                    })  
+                                .attr("dy", ".35em")
+                                .attr("text-anchor", "middle")
+                                .attr("transform", function (d) {
+                                    return "translate(" + arc3.centroid(pie(+d.cut)[0]) + ")rotate(" + angle(angles) + ")";
+                                })
+                                .style("fill", "gray")
+                                .style("font", "12px Arial")
+                                .text(function(d){return d.name.split(' ')[0];});
+
                 //enzyme mouse events
-                enzy.on("mouseover", function(d){console.log(d);})
-                    .on("mouseout", function(d){console.log(d);});
+                                //enzyme mouse events
+                enzy
+                    .on("mouseover", function(d){
+                        //get the line class
+                        var cutClass = "."+ d.name.split(' ')[0] +"-cut";
+                        d3.selectAll(cutClass).attr("stroke", "blue");
+                        //get the label class
+                        var lineClass = "."+d.name.split(' ')[0] +"-line";
+                        d3.selectAll(lineClass).attr("stroke", "blue");
+                        //get text class
+                        var textClass = "."+d.name.split(' ')[0] +"-text";
+                        d3.selectAll(textClass).style("fill", "blue").style("font", "16px Arial");
+                    })
+                    .on("mouseout", function(d){
+                        //get the line class
+                    var cutClass = "."+ d.name.split(' ')[0] +"-cut";
+                    d3.selectAll(cutClass).attr("stroke", "#1f77b4");
+                    //get the label class
+                    var lineClass = "."+d.name.split(' ')[0] +"-line";
+                    d3.selectAll(lineClass).attr("stroke", "#1f77b4");
+                    //get text class
+                    var textClass = "."+d.name.split(' ')[0] +"-text";
+                    d3.selectAll(textClass).style("fill", "gray").style("font", "11px Arial");
+                    });
+
                     })
                 }
             })
         }
-
+        return svg;
     }
 
 
@@ -302,11 +456,24 @@ function Plasmid(){
     }
 
 
-    function angle(d) {
-        var a = (d.startAngle + d.endAngle) * 90 / Math.PI + 180;
-        return a > 90 ? a - 180 : a;
+    function angle(d){
+        var a = (d[0] + d[1]) * 90 / Math.PI + 180;
+        a = a > 360 ? a - 360 : a;
+        var output = 0;
+        if(a < 90){
+            output = a - 90;
+        }
+        else if(a >= 90 && a< 180){
+            output = a - 90;
+        }
+        else if(a >= 180 && a< 270){
+            output = a + 90;
+        }
+        else{
+            output = a + 90;
+        }
+        return output;
     }
-
     //convert nt number to angle
     function nt2angle(pos, total){
         //get per nt angle
