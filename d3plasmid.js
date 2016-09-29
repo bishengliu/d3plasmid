@@ -38,7 +38,7 @@
 
 
         //features
-        var feature_gap=20, featureWidth = 10;
+        var feature_gap=20, featureWidth = 5;
 
         //variables for the mouse event 
         var selectEnzyme ="";
@@ -70,8 +70,8 @@
             lable_line_distance = genRatioVal((width + 2*padding), 2500, 20, 40);
             text_line_distance = genRatioVal((width + 2*padding), 2500, 50, 80);
             marker_length = genRatioVal((width + 2*padding), 2500, 7, 20);
-            featureWidth = genRatioVal((width + 2*padding), 2500, 5, 10);
-            feature_gap = genRatioVal((width + 2*padding), 2500, 10, 30);
+            featureWidth = genRatioVal((width + 2*padding), 2500, 0, 5);
+            feature_gap = genRatioVal((width + 2*padding), 2500, 20, 40);
         }
 
 
@@ -110,8 +110,8 @@
             lable_line_distance = genRatioVal((width + 2*padding), 2500, 20, 40);
             text_line_distance = genRatioVal((width + 2*padding), 2500, 50, 80);
             marker_length = genRatioVal((width + 2*padding), 2500, 7, 20);
-            featureWidth = genRatioVal((width + 2*padding), 2500, 5, 10);
-            feature_gap = genRatioVal((width + 2*padding), 2500, 10, 30);
+            featureWidth = genRatioVal((width + 2*padding), 2500, 0, 5);
+            feature_gap = genRatioVal((width + 2*padding), 2500, 20, 40);
             //draw empty svg
             var svg = drawSVG(id, width, padding);
 
@@ -472,6 +472,13 @@
                         .endAngle(nt2angle(+sd.end, sequence.length)[1])
                         .innerRadius(r_plasmid - r_plasmid_padding - featureWidth - margin)
                         .outerRadius(r_plasmid - margin);
+
+                        //for feature name label
+                    var arc3 = d3.arc()
+                        .startAngle(sAngle)
+                        .endAngle(eAngle + Math.PI/2)
+                        .innerRadius(r_plasmid - r_plasmid_padding - featureWidth - margin - feature_gap/3*2)
+                        .outerRadius(r_plasmid - margin - feature_gap/3*2);
                     //draw feature
                     //arrow
                     var arrow = featureG.append("defs").append("marker")
@@ -504,10 +511,14 @@
                                             }
                                         });
 
-                    featureG.append("path")                                  
+                    featureG.append("path")  
+                        .attr("class", function(d){
+                           var className = formatName(d.name, "rect");
+                           return className;
+                        })                                
                         .attr("fill", function(d){ return d.color;})
                         .attr("marker-start", function(d){
-                            if(d.clockwise == 0){ return "url(#"+si+"-marker)"; }else{ return ''; } //clockwise will be added next
+                            if(d.clockwise == 0){ return "url(#"+ formatName(d.name, "rect") + "-marker)"; }else{ return ''; } //clockwise will be added next
                         })
                         .attr("fill-opacity", .5)
                         .attr("d", arc);
@@ -515,14 +526,31 @@
                     //add extra arc for adding marker of clockwise
                     if(sd.clockwise==1){
                         featureG.append("path")
+                        .attr("class", function(d){
+                           var className = formatName(d.name, "rect");
+                           return className;
+                        })   
                         .attr("fill", function(d){ return d.color;})
                         .attr("marker-start", function(d){
-                            if(d.clockwise == 1){ return "url(#"+si+"-marker)"; }else{ return ''; }
+                            if(d.clockwise == 1){ return "url(#"+ formatName(d.name, "rect") + "-marker)"; }else{ return ''; }
                         })
                         .attr("fill-opacity", .5)
                         .attr("d", arc2);
                     }
                     
+                    //add feature label
+                    //define the text path
+                    var textPath = featureG.append("defs").append("path").attr("d", arc3).attr("id", function(d){return formatName(d.name, "text") +"-textPath";});
+                    //display the path
+                    featureG.append("text")
+                            .attr("dy", ".35em")
+                                .attr("text-anchor", "begin")
+                                .style("fill", "gray")
+                                .style("font", "12px Arial")
+                                .append("textPath")
+                                    .attr("class", "textpath")
+                                    .attr("xlink:href", function(d){return "#"+ formatName(d.name, "text") +"-textPath";})
+                                    .text(function(d){return d.name;});
                                         
                 }) //inner forEach
                 margin = margin + feature_gap;
@@ -753,4 +781,23 @@
         }
 
         return fLine;
+    }
+
+    //formate feature name for class
+    function formatName(name, type){
+        var nameArray = name.split('');
+        var finalArray = [];
+        $.each(nameArray, function(i, d){
+            if(i==0){
+                if((/[a-zA-Z]/.test(d))){
+                    finalArray.push(d);
+                }
+            }
+            else{
+                if((/[a-zA-Z0-9]/.test(d))){
+                    finalArray.push(d);
+                }
+            }
+        })
+        return finalArray.join('')+"-"+type;
     }
