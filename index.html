@@ -14,9 +14,56 @@
 
   </head>
   <body>
-      <div class="row">
+      <div class="container-fluid">
         <div id="plasmid" class="col-xs-12 col-sm-12 col-md-10 col-lg-10"></div>
-        <div id="featureForm" class="col-xs-12 col-sm-12 col-md-2 col-lg-2"></div>
+        <div id="featureAdd" class="col-xs-12 col-sm-12 col-md-2 col-lg-2 hidden">
+          <!--<div class="pull-right"><button type="button" class="btn btn-danger"><span class="glyphicon glyphicon-plus"></span> Feature</button></div>-->
+          <br/>
+          <br/>
+            <div class="panel panel-primary" id="add-feature-form">
+              <div class="panel-heading"></div>
+              <div class="panel-body">
+                <form method="POST" action="#" id="add-feature-form">
+                    <div class="form-group">
+                        <label for="add-feature-name" class="col-xs-12 col-form-label">Name</label>
+                        <div class="col-xs-12">
+                          <input class="form-control" type="text" value="" id="add-feature-name">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="add-feature-start" class="col-xs-12 col-form-label">Start</label>
+                        <div class="col-xs-12">
+                          <input class="form-control" type="number" value="" id="add-feature-start">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="add-feature-end" class="col-xs-12 col-form-label">End</label>
+                        <div class="col-xs-12">
+                          <input class="form-control" type="number" value="" id="add-feature-end">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="add-feature-color" class="col-xs-12 col-form-label">Color</label>
+                        <div class="col-xs-12">
+                        <input class="form-control" type="color" value="" id="add-feature-color">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="add-feature-direction" class="col-xs-12 col-form-label">Direction</label>
+                        <div class="col-xs-12">
+                        <input class="form-control" type="" value="" id="add-feature-direction">
+                        </div>
+                    </div>
+                    <div class="form-group pull-right">
+                      <div class="col-xs-12">
+                        <button type="submit" class="btn btn-primary">Add Feature</button>
+                      </div>
+                    </div>
+                </form>
+              </div>
+            </div>
+        </div>
+        <div id="featureEdit" class="col-xs-12 col-sm-12 col-md-2 col-lg-2"></div>
       </div>
   </body>
 </html>
@@ -61,7 +108,7 @@
       {name: "CMV2_promoter2", start: 600, end: 649, color: colores_google(12), clockwise: 1, cut:null},
       {name: "pBR322_origin2", start: 3863, end: 4082, color: colores_google(11), clockwise: 0, cut:null},
       {name: "T7_promoter2", start: 4451, end: 4669, color: colores_google(10), clockwise: 0, cut:null},
-      {name: "LacZ_a2", start: 5184, end: 5132, color: colores_google(9), clockwise: null, cut:null},
+      {name: "LacZ_a2", start: 5184, end: 5192, color: colores_google(9), clockwise: null, cut:null},
       {name: "5'-LTR2", start: 448, end: 774, color: colores_google(8), clockwise: 1, cut:null}
     ];
 
@@ -162,7 +209,7 @@
 
     var data = {
                     id: "#plasmid", //id of the plasmid div
-                    form: "#featureForm", //form id for edit feature
+                    form: "#featureEdit", //form id for edit feature
                     name: name,
                     sequence: sequence, //sequence
                     features: features, //feature array

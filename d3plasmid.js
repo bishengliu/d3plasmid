@@ -133,7 +133,6 @@
         }
     }
 
-
     //draw empty using d3
     function drawSVG(id, width, padding) {
         //calculate the width
@@ -618,7 +617,6 @@
         })
         return svg;
     }
-
 
     //generate complementary sequence
     function genCSeq(sequence){
