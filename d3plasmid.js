@@ -40,10 +40,10 @@
         //features
         var feature_gap=20, featureWidth = 5;
 
-        //variables for the mouse event 
+        //variables for the mouse event
         var selectEnzyme ="";
 
-        //read the data 
+        //read the data
         this.read = function(json){
             id = json.id;
             name = json.name;
@@ -133,7 +133,7 @@
 
 
     //draw empty using d3
-    function drawSVG(id, width, padding) { 
+    function drawSVG(id, width, padding) {
         //calculate the width
         var svg = d3.select(id)
                     .append("svg")
@@ -178,7 +178,7 @@
                     .attr("d", arc);
 
         return svg;
-        
+
     }
 
     //draw enzymes
@@ -209,7 +209,7 @@
                         .endAngle(angles[1])
                         .innerRadius(r_plasmid - cut_length/2 + lable_line_distance)
                         .outerRadius(r_plasmid - cut_length/2 + lable_line_length + lable_line_distance);
-                
+
                 var arc3 = d3.arc()
                         .startAngle(angles[0])
                         .endAngle(angles[1])
@@ -222,10 +222,10 @@
                     .datum(d);
                 //cuts
                 var cut = enzy
-                    .append("path") 
+                    .append("path")
                     .attr("class", function(d){
                         return d.name.split(' ')[0] + "-cut";
-                    })               
+                    })
                     .attr("stroke", "#8c564b")
                     .attr("stroke-width", function(){return width > 800 ? 2 : 1})
                     .attr("fill-opacity", .5)
@@ -235,7 +235,7 @@
                     .append("path")
                     .attr("class", function(d){
                         return d.name.split(' ')[0] + "-line";
-                    })                 
+                    })
                     .attr("stroke", "#cedb9c")
                     .attr("stroke-width", function(){return width > 800 ? 0.5 : .25})
                     .attr("fill-opacity", .2)
@@ -245,7 +245,7 @@
                 var label = enzy.append("text")
                                 .attr("class", function(d){
                                         return d.name.split(' ')[0] + "-text";
-                                    })  
+                                    })
                                 .attr("dy", ".35em")
                                 .attr("text-anchor", "middle")
                                 .attr("transform", function (d) {
@@ -254,7 +254,7 @@
                                 .style("fill", "gray")
                                 .style("font", "12px Arial")
                                 .text(function(d){return d.name.split(' ')[0] + " (" + d.cut + ")" ;});
-                     
+
                 //enzyme mouse events
                 enzy.on("mouseover", function(d){
                     //update select emzymes
@@ -301,13 +301,13 @@
                         .endAngle(angles[1])
                         .innerRadius(r_plasmid - r_plasmid_padding + cut_length/2)
                         .outerRadius(r_plasmid);
-                
+
                     var arc2 = d3.arc()
                         .startAngle(angles[0])
                         .endAngle(angles[1])
                         .innerRadius(r_plasmid - cut_length/2 + lable_line_distance)
                         .outerRadius(r_plasmid - cut_length/2 + lable_line_length + lable_line_distance);
-                
+
                     var arc3 = d3.arc()
                         .startAngle(angles[0])
                         .endAngle(angles[1])
@@ -323,7 +323,7 @@
                     .append("path")
                     .attr("class", function(d){
                                         return d.name.split(' ')[0] + "-cut";
-                                    })                 
+                                    })
                     .attr("stroke", "#8c564b")
                     .attr("stroke-width", function(){return width > 800 ? 2 : 1})
                     .attr("fill-opacity", .5)
@@ -333,7 +333,7 @@
                     .append("path")
                     .attr("class", function(d){
                         return d.name.split(' ')[0] + "-line";
-                    })                 
+                    })
                     .attr("stroke", "#cedb9c")
                     .attr("stroke-width", function(){return width > 800 ? 0.5 : .25})
                     .attr("fill-opacity", .2)
@@ -343,7 +343,7 @@
                 var label = enzy.append("text")
                                 .attr("class", function(d){
                                         return d.name.split(' ')[0] + "-text";
-                                    })  
+                                    })
                                 .attr("dy", ".35em")
                                 .attr("text-anchor", "middle")
                                 .attr("transform", function (d) {
@@ -412,13 +412,13 @@
                         .outerRadius(r_plasmid - 2* marker_length);
             //markers
             var markers = markerG.datum(d)
-                    .append("path")                                   
+                    .append("path")
                     .attr("stroke", "#2ca02c")
                     .attr("stroke-width", function(){return width > 800 ? 2 : 1})
-                    .attr("d", arc); 
+                    .attr("d", arc);
 
             //add label
-            var label = markerG.append("text") 
+            var label = markerG.append("text")
                                 .attr("class", "noEvent")
                                 .attr("dy", ".35em")
                                 .attr("text-anchor", "middle")
@@ -455,7 +455,7 @@
                 d.forEach(function(sd, si){
                     var sAngle =nt2angle(+sd.start, sequence.length)[0];
                     var eAngle = nt2angle(+sd.end, sequence.length)[0];
-                    //set the margins 
+                    //set the margins
                     angles.push([sAngle, eAngle]);
                     //feature g
                     var featureG = featureRects.append("g")
@@ -482,7 +482,7 @@
                     //draw feature
                     //arrow
                     var arrow = featureG.append("defs").append("marker")
-                                        .attr("id", si + "-marker")
+                                        .attr("id", function(d){ return formatName(d.name, "rect") + "-marker";})
                                         .attr("refX", function(d){
                                             var shift = 0;
                                             if(d.clockwise == 0){
@@ -511,11 +511,11 @@
                                             }
                                         });
 
-                    featureG.append("path")  
+                    featureG.append("path")
                         .attr("class", function(d){
                            var className = formatName(d.name, "rect");
                            return className;
-                        })                                
+                        })
                         .attr("fill", function(d){ return d.color;})
                         .attr("marker-start", function(d){
                             if(d.clockwise == 0){ return "url(#"+ formatName(d.name, "rect") + "-marker)"; }else{ return ''; } //clockwise will be added next
@@ -529,7 +529,7 @@
                         .attr("class", function(d){
                            var className = formatName(d.name, "rect");
                            return className;
-                        })   
+                        })
                         .attr("fill", function(d){ return d.color;})
                         .attr("marker-start", function(d){
                             if(d.clockwise == 1){ return "url(#"+ formatName(d.name, "rect") + "-marker)"; }else{ return ''; }
@@ -537,12 +537,13 @@
                         .attr("fill-opacity", .5)
                         .attr("d", arc2);
                     }
-                    
+
                     //add feature label
                     //define the text path
                     var textPath = featureG.append("defs").append("path").attr("d", arc3).attr("id", function(d){return formatName(d.name, "text") +"-textPath";});
-                    //display the path
+                    //display the text along the path
                     featureG.append("text")
+                            .attr("id", function(d){return formatName(d.name, "text") +"-text";})
                             .attr("dy", ".35em")
                                 .attr("text-anchor", "begin")
                                 .style("fill", "gray")
@@ -550,11 +551,39 @@
                                 .append("textPath")
                                     .attr("class", "textpath")
                                     .attr("xlink:href", function(d){return "#"+ formatName(d.name, "text") +"-textPath";})
-                                    .text(function(d){return d.name;});
-                                        
+                                    .text(function(d){
+                                        var degree = (eAngle - sAngle)*90;
+                                        if(degree >=10 && width>= 1024){
+                                            return d.name;
+                                        }
+                                        else{
+                                            return truncate(d.name, 5, '...');
+                                        }
+                                    });
+
+                    //mouse events
+                     featureG.on("mouseover", function(d){
+                         //get the feature rect and feature name and marker
+                         var arrowId = "#"+ formatName(d.name, "rect") + "-marker";
+                         var rectClass = '.'+formatName(d.name, "rect");
+                         var nameId = '#'+formatName(d.name, "text") +"-text";
+                         d3.select(arrowId).attr("fill-opacity", .8);
+                         d3.selectAll(rectClass).attr("fill-opacity", .8);
+                         d3.select(nameId).style("fill", function(d){return d.color;});
+                     })
+                     .on("mouseout", function(d){
+                            var arrowId = "#"+ formatName(d.name, "rect") + "-marker";
+                            var rectClass = '.'+formatName(d.name, "rect");
+                            var nameId = '#'+formatName(d.name, "text") +"-text";
+                            d3.select(arrowId).attr("fill-opacity", .4);
+                            d3.selectAll(rectClass).attr("fill-opacity", .4);
+                            d3.select(nameId).style("fill", "gray");
+                     })
+                     ;
+
                 }) //inner forEach
                 margin = margin + feature_gap;
-            }            
+            }
         })
         return svg;
     }
@@ -588,7 +617,7 @@
         var symbol = ' ', ntPerLine = 80; //fasta seq
         var outputArray = [];
         var array = sequence.match(new RegExp('.{1,' + ntPerLine + '}', 'g')).join('|').split('|');
-        $.each(array, function (i, d) { 
+        $.each(array, function (i, d) {
             var itemSeq = d.match(/.{1,10}/g).join(symbol);
             outputArray.push(itemSeq);
         })
@@ -620,7 +649,7 @@
             return sortStatus;
         };
     }
-    
+
     //format feature for class
     function formatName(name){
         var nameArray = name.split('');
@@ -702,7 +731,7 @@
         var fLine =[];
         var total = features.length;
 
-        //get the max possible lines and push empty array 
+        //get the max possible lines and push empty array
         for(a=0; a< total; a++){
             fLine.push([]);
         }
@@ -742,9 +771,9 @@
                             }
                             else{
                                 fLine[line+1].push(features[0]);
-                            }                        
+                            }
                             features.pop();
-                        }                    
+                        }
                     }
 
                     if(features.length ===0){
@@ -752,8 +781,8 @@
                     }
 
                     var z = features.length;
-                    while(z--){                    
-                        var lFeature = features[z]; 
+                    while(z--){
+                        var lFeature = features[z];
                         if(lFeature.end <= rFeature.start){
                             fLine[line].push(lFeature);
                             rFeature = lFeature;
@@ -763,7 +792,7 @@
                             tempArray.push(lFeature);
                             rFeature = lFeature;
                             features.pop();
-                        }                
+                        }
                     }
 
                     if(tempArray.length == 0){
@@ -771,7 +800,7 @@
                     }else{
                         line++;
                         features = tempArray;
-                        features.sort(sortByProperty('start'));               
+                        features.sort(sortByProperty('start'));
                         rFeature = features[features.length - 1];
                         fLine[line].push(rFeature);
                         features.pop();
@@ -801,3 +830,12 @@
         })
         return finalArray.join('')+"-"+type;
     }
+    //truncate the feature name
+    function truncate(str, maxLength, suffix) {
+	if(str.length > maxLength) {
+		str = str.substring(0, maxLength + 1); 
+		str = str.substring(0, Math.min(str.length, str.lastIndexOf(" ")));
+		str = str + suffix;
+	}
+	return str;
+}
