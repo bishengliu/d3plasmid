@@ -94,6 +94,11 @@
 
             //draw features
             var pFeatures = drawFeature(svg, features, width, r_enzy, r_plasmid, r_plasmid_padding, sequence, feature_gap, featureWidth, form);
+
+            //rotate feature
+            d3.select("#plasmid_map")
+                .transition().duration(1000)
+                .attr("transform", "rotate(90 "+ (r_plasmid + r_enzy + padding) +" "+ (r_plasmid + r_enzy + padding) +")");
         }
 
         //redraw
@@ -141,7 +146,8 @@
                     .attr("width", width + padding * 2)
                     .attr("height", width + padding * 2)
                         .append("g")
-                            .attr("transform", "translate(" + padding +"," + padding + ")");
+                            .attr("id", "plasmid_map")
+                            .attr("transform", "translate(" + padding + "," + padding + ")");
         return svg;
     }
 
@@ -712,7 +718,6 @@
         return output;
     }
 
-
     function angle(d){
         var a = (d[0] + d[1]) * 90 / Math.PI + 180;
         a = a > 360 ? a - 360 : a;
@@ -930,7 +935,6 @@
                             html += '<button type="submit" class="btn btn-primary">Save Changes</button>';
                         html += '</div>';
                     html += '</div>';
-
                     html += '</form>';
                 html += '</div>';
             html += '</div>';
