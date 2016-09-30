@@ -4,6 +4,7 @@
     function Plasmid(){
         //set some global varaibles
         var id = '',
+            form ='',
             name = '',
             sequence ='',
             showEnzyme = true,
@@ -46,6 +47,7 @@
         //read the data
         this.read = function(json){
             id = json.id;
+            form = json.form;
             name = json.name;
             sequence = json.sequence;
             features = json.features;
@@ -91,7 +93,7 @@
             var markers = drawSeqCount(svg, sequence.length, width,  r_enzy, r_plasmid, r_plasmid_padding, marker_length);
 
             //draw features
-            var pFeatures = drawFeature(svg, features, width, r_enzy, r_plasmid, r_plasmid_padding, sequence, feature_gap, featureWidth);
+            var pFeatures = drawFeature(svg, features, width, r_enzy, r_plasmid, r_plasmid_padding, sequence, feature_gap, featureWidth, form);
         }
 
         //redraw
@@ -127,7 +129,7 @@
             var markers = drawSeqCount(svg, sequence.length, width,  r_enzy, r_plasmid, r_plasmid_padding, marker_length);
 
             //draw features
-            var pFeatures = drawFeature(svg, features, width, r_enzy, r_plasmid, r_plasmid_padding, sequence, feature_gap, featureWidth);
+            var pFeatures = drawFeature(svg, features, width, r_enzy, r_plasmid, r_plasmid_padding, sequence, feature_gap, featureWidth, form);
         }
     }
 
@@ -168,7 +170,9 @@
                         return fontSize +"px";
                     })
                     .style("fill", "#636363")
-                    .text(name);
+                    .text(function(){
+                        if(width>=650){return name;} else { return '';}
+                    });
             //backbone plasmid
             backbone.append("path")
                     .attr("stroke", "#6baed6")
@@ -433,10 +437,11 @@
     }
 
     //draw features
-    function drawFeature(svg, features, width, r_enzy, r_plasmid, r_plasmid_padding, sequence, feature_gap, featureWidth){
-        var pie = d3.pie()
-                    .sort(null)
-                    .value(function (d) { return +d; });
+    function drawFeature(svg, features, width, r_enzy, r_plasmid, r_plasmid_padding, sequence, feature_gap, featureWidth, form){
+        //tooltip for the mouseover event
+        //first remove all the tooltip
+        d3.selectAll(".rectTooltip").remove();
+        var tooltip = d3.select("body").append("div").attr("class", "rectTooltip").style("opacity", 0);
         //deep copy the features to keep the original features not removed by the function below
         var temaFeatures = [];
         features.forEach(function(d, i){
@@ -482,6 +487,7 @@
                     //draw feature
                     //arrow
                     var arrow = featureG.append("defs").append("marker")
+                                        .attr("class", "rectArrow")
                                         .attr("id", function(d){ return formatName(d.name, "rect") + "-marker";})
                                         .attr("refX", function(d){
                                             var shift = 0;
@@ -513,7 +519,7 @@
 
                     featureG.append("path")
                         .attr("class", function(d){
-                           var className = formatName(d.name, "rect");
+                           var className = formatName(d.name, "rect") + " featureRect";
                            return className;
                         })
                         .attr("fill", function(d){ return d.color;})
@@ -527,7 +533,7 @@
                     if(sd.clockwise==1){
                         featureG.append("path")
                         .attr("class", function(d){
-                           var className = formatName(d.name, "rect");
+                           var className = formatName(d.name, "rect") + " featureRect";
                            return className;
                         })
                         .attr("fill", function(d){ return d.color;})
@@ -543,6 +549,7 @@
                     var textPath = featureG.append("defs").append("path").attr("d", arc3).attr("id", function(d){return formatName(d.name, "text") +"-textPath";});
                     //display the text along the path
                     featureG.append("text")
+                            .attr("class", "noEvent")
                             .attr("id", function(d){return formatName(d.name, "text") +"-text";})
                             .attr("dy", ".35em")
                                 .attr("text-anchor", "begin")
@@ -553,7 +560,7 @@
                                     .attr("xlink:href", function(d){return "#"+ formatName(d.name, "text") +"-textPath";})
                                     .text(function(d){
                                         var degree = (eAngle - sAngle)*90;
-                                        if(degree >=10 && width>= 1024){
+                                        if(degree >=10 && width>= 800){
                                             return d.name;
                                         }
                                         else{
@@ -562,7 +569,8 @@
                                     });
 
                     //mouse events
-                     featureG.on("mouseover", function(d){
+                     featureG
+                     .on("mouseover", function(d){
                          //get the feature rect and feature name and marker
                          var arrowId = "#"+ formatName(d.name, "rect") + "-marker";
                          var rectClass = '.'+formatName(d.name, "rect");
@@ -570,6 +578,17 @@
                          d3.select(arrowId).attr("fill-opacity", .8);
                          d3.selectAll(rectClass).attr("fill-opacity", .8);
                          d3.select(nameId).style("fill", function(d){return d.color;});
+                         //show tooltip
+                         //get the subsequence and format substring
+                         var subSeq = formatSeq(sequence.substring(+d.start-1, +d.end-1), ' ', 40);
+                         var subSeqString = convert2String(subSeq);
+                         tooltip.html("<p class='text-center'><span class='text-danger'><b>"+ d.name + "</b></span><br/>(<i>Position</i>: " + d.start + "-" + d.end + ", <i>Clockwise</i>: <span class='text-primary'>"+ genDirection(d.clockwise)+"</span>)</p><hr/><p class='seqFont'>"+ subSeqString +'</p>')
+                                .style("left", (d3.event.pageX +28) + "px")
+                                .style("top", (d3.event.pageY - 28) + "px");
+                         tooltip.transition()
+                            .duration(200)
+                            .style("opacity", .9);
+                        
                      })
                      .on("mouseout", function(d){
                             var arrowId = "#"+ formatName(d.name, "rect") + "-marker";
@@ -578,6 +597,18 @@
                             d3.select(arrowId).attr("fill-opacity", .4);
                             d3.selectAll(rectClass).attr("fill-opacity", .4);
                             d3.select(nameId).style("fill", "gray");
+                            //hide tooltip
+                            tooltip.transition()
+                                    .duration(500)
+                                    .style("opacity", 0);
+                     })
+                     .on("click", function(d){
+                         $(form).empty();
+                         displayForm(form, d);
+                         $("#close-feature-form").click(function(e){
+                             event.preventDefault();
+                             $(this).parent().parent().parent().slideUp();
+                         });
                      })
                      ;
 
@@ -587,7 +618,6 @@
         })
         return svg;
     }
-
 
 
     //generate complementary sequence
@@ -832,10 +862,80 @@
     }
     //truncate the feature name
     function truncate(str, maxLength, suffix) {
-	if(str.length > maxLength) {
-		str = str.substring(0, maxLength + 1); 
-		str = str.substring(0, Math.min(str.length, str.lastIndexOf(" ")));
-		str = str + suffix;
-	}
-	return str;
-}
+        if(str.length > maxLength) {
+            str = str.substring(0, maxLength + 1); 
+            str = str.substring(0, Math.min(str.length, str.lastIndexOf(" ")));
+            str = str + suffix;
+        }
+	    return str;
+    }
+
+    function genDirection(clockwise){
+        var result ='';
+        if(clockwise==1){
+            result = 'clockwise';
+        }
+        else if(clockwise ==0){
+            result = 'anticlockwise';
+        }
+        else{
+            result='';
+        }
+        return result;
+    }
+
+    //generate sequence that split with a symbol every 10 nt and output the array
+    function formatSeq(sequence, symbol, ntPerLine){
+        var outputArray = [];
+        var array = sequence.match(new RegExp('.{1,' + ntPerLine + '}', 'g')).join('|').split('|');
+        $.each(array, function (i, d) { 
+            var itemSeq = d.match(/.{1,10}/g).join(symbol);
+            outputArray.push(itemSeq);
+        })
+        return outputArray;
+    }
+    //convert array to string
+    function convert2String(subSeq){
+        var output ='';
+        subSeq.forEach(function(d, i){
+            output = output + d +'<br/>';
+        })
+        return output;
+    }
+
+    //form for editing features
+    function displayForm(form, d){
+        var html ='<div class="panel-group">';
+            html +='<div class="panel panel-info">';
+                html +='<div class="panel-heading">' + d.name;
+                    html += '<div class="col-xs-2 pull-right"><button type="button" class="btn btn-xs btn-danger" id="close-feature-form">X</button></div>';
+                html += '</div>';
+                html +='<div class="panel-body">';
+                    html += '<form method="POST" action="#">';
+                    //name
+                    html += '<div class="form-group">';
+                        html += '<label for="feature-name" class="col-xs-12 col-form-label">Name</label>';
+                        html += '<div class="col-xs-12">';
+                            html += '<input class="form-control" type="text" value="'+d.name+'" id="feature-name">';
+                        html += '</div>';
+                    html += '</div>';
+                    //color
+                    html += '<div class="form-group">';
+                        html += '<label for="feature-color" class="col-xs-12 col-form-label">Color</label>';
+                        html += '<div class="col-xs-12">';
+                            html += '<input class="form-control" type="color" value="'+d.color+'" id="feature-color">';
+                        html += '</div>';
+                    html += '</div>';
+                    //button
+                    html += '<div class="form-group  pull-right">';
+                        html += '<div class="col-xs-12">';
+                            html += '<button type="submit" class="btn btn-primary">Save Changes</button>';
+                        html += '</div>';
+                    html += '</div>';
+
+                    html += '</form>';
+                html += '</div>';
+            html += '</div>';
+        html += '</div>';
+        $(form).append(html);
+    }

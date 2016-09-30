@@ -14,3 +14,24 @@
     font-family: monospace;
     font-size: 13px;
 }
+
+.rectArrow, .featureRect{
+    cursor: pointer;
+}
+
+div.rectTooltip {   
+  position: absolute;           
+  text-align: left;           
+  width: 320px;                  
+  padding: 5px;             
+  font: 10px sans-serif;        
+  background: #aec7e8;   
+  border: 0px;      
+  border-radius: 8px;           
+  pointer-events: none;         
+}
+
+.seqFont{
+    font-family: monospace;
+    font-size: 13px;
+}

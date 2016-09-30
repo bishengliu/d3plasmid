@@ -14,8 +14,9 @@
 
   </head>
   <body>
-      <div>
-        <div id="plasmid"></div>
+      <div class="row">
+        <div id="plasmid" class="col-xs-12 col-sm-12 col-md-10 col-lg-10"></div>
+        <div id="featureForm" class="col-xs-12 col-sm-12 col-md-2 col-lg-2"></div>
       </div>
   </body>
 </html>
@@ -161,6 +162,7 @@
 
     var data = {
                     id: "#plasmid", //id of the plasmid div
+                    form: "#featureForm", //form id for edit feature
                     name: name,
                     sequence: sequence, //sequence
                     features: features, //feature array
