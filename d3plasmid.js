@@ -165,10 +165,11 @@
             //draw empty svg
             var svg = drawSVG(id, width, l_padding);
             //draw linear map
-            var plasmid = drawLinearPlasmid(svg, id, width, name, t_padding, l_enzy, l_padding, name_height, dna_gap);
+            var plasmid = drawLinearPlasmid(svg, width, name, t_padding, l_enzy, l_padding, name_height, dna_gap);
             //draw enzymes
             var enzyme = drawLinearEnzyme(id, svg, enzymes, cuts_number, sequence.length, width, t_padding, l_enzy, l_padding, lable_line_length, text_line_distance, label_line_gap, cut_length, dna_gap, selectEnzyme);
-
+            //draw markers
+             drawLinearCount(sequence.length, width, t_padding, l_enzy, l_padding, dna_gap, cut_length);
         }
         //redraw linear map 
         this.redrawLinear =function(){
@@ -234,7 +235,7 @@
     }
 
     //draw linear plasmid backbone
-    function drawLinearPlasmid(svg, id, width, name, t_padding, l_enzy, l_padding, name_height, dna_gap){
+    function drawLinearPlasmid(svg, width, name, t_padding, l_enzy, l_padding, name_height, dna_gap){
         var backbone = svg.append('g').attr("transform", "translate(" + (0) + "," + (t_padding + l_enzy) + ")").attr("id", "backbone");
             //draw lines for dna backbone
             //first line
@@ -255,7 +256,7 @@
 
             //plasmid label
             backbone.append("text")
-                    .attr("transform", "translate(" + (width/2) + "," + name_height + ")")
+                    .attr("transform", "translate(" + (width/2) + "," + (3*name_height) + ")")
                     .attr("id", "pName")
                     .attr("class", "plasmidName noEvent")
                     .attr("display", function(){
@@ -682,6 +683,7 @@
         //enzyme
         d3.select("#enzyme").transition().duration(10).attr("transform", "translate(" + (0) + "," + (t_padding + l_enzy) + ")");
         
+        return svg;
     }
 
     //draw the inner seqCount
@@ -728,6 +730,44 @@
         return svg;
     }
 
+    //draw the low seqCount
+    function drawLinearCount(seqLength, width, t_padding, l_enzy, l_padding, dna_gap, cut_length){
+        //add g
+        var backbone = d3.select("#backbone");
+        var markerG = backbone.append('g').attr("id", "markers");
+        //process the seq length to get only location of 1000
+        var positions = genSeqCount(seqLength);
+        var markerLine = markerG.selectAll(".marker-line")
+                            .data(positions)
+                            .enter();
+            //add lines
+            markerLine.append("line")
+                  .attr("class", "marker-line")
+                  .attr("stroke", "#2ca02c")
+                    .attr("stroke-width", function(){return width > 800 ? 2 : 1})
+                    .attr("stroke-opacity", .5)
+                    .attr("x1", function(d){
+                        return pos2Length(d, seqLength, width);
+                    })
+                    .attr("y1", dna_gap)
+                    .attr("x2", function(d){
+                        return pos2Length(d, seqLength, width) + .5;
+                    })
+                    .attr("y2", cut_length/4 + dna_gap);
+            //add text
+        var markerText = markerG.selectAll(".marker-text")
+                            .data(positions)
+                            .enter();
+            markerText.append("text")
+                                .attr("class", ".marker-text noEvent")
+                                .attr("text-anchor", "middle")
+                                .attr("transform", function (d) {
+                                    return "translate(" + pos2Length(d, seqLength, width) + "," + ( cut_length + dna_gap ) + ")";
+                                })
+                                .style("fill", "#2ca02c")
+                                .style("font", "10px Arial")
+                                .text(function(d){return Math.trunc(d/1000)+"K" ;});
+    }
     //draw features
     function drawFeature(svg, features, width, r_enzy, r_plasmid, r_plasmid_padding, sequence, feature_gap, featureWidth, form){
         //tooltip for the mouseover event
