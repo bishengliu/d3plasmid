@@ -1203,6 +1203,16 @@
                      .on("click", function(d){
                          $(form).empty();
                          displayForm(form, d);
+                         //validate form
+                        $("#save-feature").click(function(e){
+                            var name = $("#feature-name").val();                            
+                            if(name == null || name == ''){
+                                $("#feature-name-msg").text("Required");
+                                return false;
+                            }                            
+                            return true;
+                        })
+
                          $("#close-feature-form").click(function(e){
                              event.preventDefault();
                              $(this).parent().parent().parent().slideUp();
@@ -1509,21 +1519,21 @@
     function displayForm(form, d){
         var html ='<div class="panel-group">';
             html +='<div class="panel panel-info">';
-                html +='<div class="panel-heading">' + d.name;
+                html +='<div class="panel-heading"> Edit Feature';
                     html += '<div class="col-xs-2 pull-right"><button type="button" class="btn btn-xs btn-danger" id="close-feature-form">X</button></div>';
                 html += '</div>';
                 html +='<div class="panel-body">';
                     html += '<form method="POST" action="#">';
                     //name
-                    html += '<div class="form-group">';
-                        html += '<label for="feature-name" class="col-xs-12 col-form-label">Name</label>';
+                    html += '<div class="form-group required">';
+                        html += '<label for="feature-name" class="col-xs-8 control-label">Name</label><span class="text-danger col-xs-4" id="feature-name-msg"></span>';
                         html += '<div class="col-xs-12">';
                             html += '<input class="form-control" type="text" value="'+d.name+'" id="feature-name">';
                         html += '</div>';
                     html += '</div>';
                     //color
                     html += '<div class="form-group">';
-                        html += '<label for="feature-color" class="col-xs-12 col-form-label">Color</label>';
+                        html += '<label for="feature-color" class="col-xs-12 control-label">Color</label>';
                         html += '<div class="col-xs-12">';
                             html += '<input class="form-control" type="color" value="'+d.color+'" id="feature-color">';
                         html += '</div>';
@@ -1531,7 +1541,7 @@
                     //button
                     html += '<div class="form-group  pull-right">';
                         html += '<div class="col-xs-12">';
-                            html += '<button type="submit" class="btn btn-primary">Save Changes</button>';
+                            html += '<button type="submit" class="btn btn-primary" id="save-feature">Save Changes</button>';
                         html += '</div>';
                     html += '</div>';
                     html += '</form>';
