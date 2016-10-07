@@ -53,7 +53,8 @@
         var dna_gap = 6;
         //for minimal enzyme lable-line gap
         var label_line_gap = 10;
-
+        //for maker arrow
+        var arrow_parameter = genRatioVal((width + 2*padding), 2500, 2, 10);
         //read the data
         this.read = function(json){
             id = json.id;
@@ -165,11 +166,13 @@
             //draw empty svg
             var svg = drawSVG(id, width, l_padding);
             //draw linear map
-            var plasmid = drawLinearPlasmid(svg, width, name, t_padding, l_enzy, l_padding, name_height, dna_gap);
+            drawLinearPlasmid(svg, width, name, t_padding, l_enzy, l_padding, name_height, dna_gap);
             //draw enzymes
-            var enzyme = drawLinearEnzyme(id, svg, enzymes, cuts_number, sequence.length, width, t_padding, l_enzy, l_padding, lable_line_length, text_line_distance, label_line_gap, cut_length, dna_gap, selectEnzyme);
+            drawLinearEnzyme(id, svg, enzymes, cuts_number, sequence.length, width, t_padding, l_enzy, l_padding, lable_line_length, text_line_distance, label_line_gap, cut_length, dna_gap, selectEnzyme);
             //draw markers
              drawLinearCount(sequence.length, width, t_padding, l_enzy, l_padding, dna_gap, cut_length);
+             //draw features
+             drawLinearFeature(svg, features, sequence.length, width, t_padding, l_enzy, l_padding, arrow_parameter, dna_gap, cut_length, sequence, feature_gap, featureWidth, form);
         }
         //redraw linear map 
         this.redrawLinear =function(){
@@ -501,7 +504,7 @@
                 var cut = enzy
                     .append("line")
                     .attr("class", function(d){
-                        return d.name.split(' ')[0] + "-cut";
+                        return d.name.split(' ')[0] + "-cut noEvent";
                     })
                     .attr("stroke", "#8c564b")
                     .attr("stroke-width", function(){return width > 800 ? 2 : 1})
@@ -601,7 +604,7 @@
                         var cut = enzy
                             .append("line")
                             .attr("class", function(d){
-                                return d.name.split(' ')[0] + "-cut";
+                                return d.name.split(' ')[0] + "-cut noEvent";
                             })
                             .attr("stroke", "#8c564b")
                             .attr("stroke-width", function(){return width > 800 ? 2 : 1})
@@ -941,8 +944,7 @@
                              event.preventDefault();
                              $(this).parent().parent().parent().slideUp();
                          });
-                     })
-                     ;
+                     });
 
                 }) //inner forEach
                 margin = margin + feature_gap;
@@ -951,6 +953,172 @@
         return svg;
     }
 
+    function drawLinearFeature(svg, features, totalLength, width, t_padding, l_enzy, l_padding, arrow_parameter, dna_gap, cut_length, sequence, feature_gap, featureWidth, form){
+        //tooltip for the mouseover event
+        //first remove all the tooltip
+        d3.selectAll(".rectTooltip").remove();
+        var tooltip = d3.select("body").append("div").attr("class", "rectTooltip").style("opacity", 0);
+        //deep copy the features to keep the original features not removed by the function below
+        var temaFeatures = [];
+        features.forEach(function(d, i){
+            temaFeatures.push(d);
+        });
+        var featureRects = d3.select("#backbone").append('g').attr("id", "features").attr("transform", "translate(" + (0) + "," + (cut_length/2) + ")");
+        var fLines = formatFeatures(temaFeatures);
+        var margin = feature_gap; //gap between feature lines
+        var pName_height = margin; //ajust the plasmid name height
+        fLines.forEach(function(d, i){
+            //reverse array
+            d.reverse();
+            if(d.length > 0){
+                d.forEach(function(sd, si){
+                    //feature g
+                    var featureG = featureRects.append("g")
+                                                .attr("class","featureG")
+                                                  .datum(sd);
+                                        //arrow
+                    var arrow = featureG.append("defs").append("marker")
+                                        .attr("class", "rectArrow")
+                                        .attr("id", function(d){ return formatName(d.name, "rect") + "-marker";})
+                                        .attr("refX", function(d){
+                                            var shift = 0;
+                                            if(d.clockwise == 0){
+                                                shift = (arrow_parameter + featureWidth)/4;
+                                            }                                            
+                                            return shift;
+                                        })
+                                        .attr("refY", function(d){
+                                            var shift = (arrow_parameter + featureWidth)/4;
+                                            return shift;
+                                        })
+                                        .attr("markerWidth", 2500)
+                                        .attr("markerHeight", 2500)
+                                        .attr("orient", function(){
+                                            return "auto";
+                                        })
+                                        .append("path")
+                                        .attr("d", function(){
+                                            return "M0,0 L0,"+ (arrow_parameter + featureWidth)/2 +" L"+(arrow_parameter + featureWidth)/4+","+(arrow_parameter + featureWidth)/4+" Z";
+                                        })
+                                        .attr("fill-opacity", .5)
+                                        .style("fill", function(d){ return d.color; })
+                                        .attr("transform", function(d){
+                                            if(d.clockwise == 0){
+                                                return "translate(" + (arrow_parameter + featureWidth)/4 + ", 0) scale(-1, 1)"; //mirrored for anticlock wise
+                                            }
+                                        });
+
+                    //anticlockwise or no direction
+                    if(sd.clockwise != 1){
+                           featureG.append("line")
+                           .attr("class", function(d){
+                                var className = formatName(d.name, "rect") + " featureRect";
+                                return className;
+                            })
+                            .attr("marker-start", function(d){
+                                if(d.clockwise == 0){ return "url(#"+ formatName(d.name, "rect") + "-marker)"; } else { return ''; } //clockwise will be added next
+                            })
+                            .attr("stroke", function(d){ return d.color;})
+                            .style("stroke-width", 2.5*featureWidth)
+                            .style("stroke-opacity", 0.5)
+                            .attr("x1", function(d){ return pos2Length(d.start, totalLength, width); })
+                            .attr("x2", function(d){ return pos2Length(d.end, totalLength, width); })
+                            .attr("y1", margin)
+                            .attr("y2", margin);
+                    }                    
+                    //clockwise
+                    if(sd.clockwise==1){
+                        featureG.append("line")
+                            .attr("class", function(d){
+                                var className = formatName(d.name, "rect") + " featureRect";
+                                return className;
+                            })
+                            .attr("marker-end", function(d){
+                                { return "url(#"+ formatName(d.name, "rect") + "-marker)"; } //clockwise will be added next
+                            })
+                            .attr("stroke", function(d){ return d.color;})
+                            .style("stroke-width", 2.5*featureWidth)
+                            .style("stroke-opacity", 0.5)
+                            .attr("x1", function(d){ return pos2Length(d.start, totalLength, width); })
+                            .attr("x2", function(d){ return pos2Length(d.end, totalLength, width); })
+                            .attr("y1", margin)
+                            .attr("y2", margin);
+                    }
+                    //add feature label text
+                    featureG.append("text")
+                            .attr("transform", function(d){
+                                return "translate(" + (pos2Length(d.start, totalLength, width)) + "," + (margin + feature_gap/2) + ")";
+                            })
+                            .attr("class", "noEvent")
+                            .attr("id", function(d){return formatName(d.name, "text") +"-text";})
+                            .attr("dy", ".35em")
+                            .attr("text-anchor", "begin")
+                            .style("fill", "gray")
+                            .style("font", "12px Arial")
+                            .text(function(d){
+                                if(pos2Length(d.end, totalLength, width) - pos2Length(d.start, totalLength, width) >= pos2Length(totalLength, totalLength, width) / 50){
+                                    return d.name
+                                }
+                                else{
+                                    return truncate(d.name, 5, '...');
+                                }
+                            })
+                     //mouse events
+                     featureG
+                     .on("mouseover", function(d){
+                         //get the feature rect and feature name and marker
+                         var arrowId = "#"+ formatName(d.name, "rect") + "-marker";
+                         var rectClass = '.'+formatName(d.name, "rect");
+                         var nameId = '#'+formatName(d.name, "text") +"-text";
+                         d3.select(arrowId).attr("fill-opacity", .8);
+                         d3.selectAll(rectClass).attr("fill-opacity", .8);
+                         d3.select(nameId).style("fill", function(d){return d.color;});
+                         //show tooltip
+                         //get the subsequence and format substring
+                         var subSeq = formatSeq(sequence.substring(+d.start-1, +d.end-1), ' ', 40);
+                         var subSeqString = convert2String(subSeq);
+                         tooltip.html("<p class='text-center'><span class='text-danger'><b>"+ d.name + "</b></span><br/>(<i>Position</i>: " + d.start + "-" + d.end + ", <i>Clockwise</i>: <span class='text-primary'>"+ genDirection(d.clockwise)+"</span>)</p><hr/><p class='seqFont'>"+ subSeqString +'</p>')
+                                .style("left", (d3.event.pageX +28) + "px")
+                                .style("top", (d3.event.pageY - 28) + "px");
+                         tooltip.transition()
+                            .duration(200)
+                            .style("opacity", .9);
+                        
+                     })
+                     .on("mouseout", function(d){
+                            var arrowId = "#"+ formatName(d.name, "rect") + "-marker";
+                            var rectClass = '.'+formatName(d.name, "rect");
+                            var nameId = '#'+formatName(d.name, "text") +"-text";
+                            d3.select(arrowId).attr("fill-opacity", .4);
+                            d3.selectAll(rectClass).attr("fill-opacity", .4);
+                            d3.select(nameId).style("fill", "gray");
+                            //hide tooltip
+                            tooltip.transition()
+                                    .duration(500)
+                                    .style("opacity", 0);
+                     })
+                     .on("click", function(d){
+                         $(form).empty();
+                         displayForm(form, d);
+                         $("#close-feature-form").click(function(e){
+                             event.preventDefault();
+                             $(this).parent().parent().parent().slideUp();
+                         });
+                     });
+                });
+                margin = margin + 1.5*feature_gap;
+                pName_height += 1.5*feature_gap;   
+            }
+        })
+        //svg height
+        var backboneHeight = d3.select("#backbone").node().getBBox().height;
+        var enzymeHeight = d3.select("#enzyme").node().getBBox().height;
+        d3.select("#plasmid_svg").transition().duration(10).attr("height", backboneHeight + enzymeHeight + pName_height+ 50);
+
+        //adjest plasmid name                    
+        d3.select("#pName").attr("transform", "translate(" + (width/2) + "," + (pName_height + 50) + ")");
+        
+    }
     //generate complementary sequence
     function genCSeq(sequence){
         var cSequence ="";
@@ -1209,7 +1377,7 @@
             result = 'anticlockwise';
         }
         else{
-            result='';
+            result='no direction';
         }
         return result;
     }

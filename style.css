@@ -18,7 +18,9 @@
 .rectArrow, .featureRect{
     cursor: pointer;
 }
-
+.featureG{
+    cursor: pointer;
+}
 div.rectTooltip {   
   position: absolute;           
   text-align: left;           
