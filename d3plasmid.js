@@ -96,6 +96,7 @@
             dna_gap = genRatioVal(($(id).width()), 2500, 3, 6);
             //for minimal enzyme lable-line gap
             label_line_gap = genRatioVal(($(id).width()), 2500, 15, 10);
+            arrow_parameter = genRatioVal(($(id).width()), 2500, 1, 4);
         }
 
         //draw circular map
@@ -181,6 +182,32 @@
             width = $(id).width() - padding * 2; //padding on each side
             width = width < 250 ? 250 : width;
 
+            cut_length = genRatioVal($(id).width(), 2500, 14, 40);
+            lable_line_length = genRatioVal($(id).width(), 2500, 10, 30);
+            text_line_distance = genRatioVal($(id).width(), 2500, 50, 80);
+            featureWidth = genRatioVal($(id).width(), 2500, 0, 5);
+            feature_gap = genRatioVal($(id).width(), 2500, 20, 40);
+
+            //for linear parameters
+            l_padding = genRatioVal($(id).width(), 2500, 50, 100);            
+            t_padding = genRatioVal(($(id).width()), 2500, 100, 250);
+            l_enzy = genRatioVal(($(id).width()), 2500, 100, 250);
+            //where the plasmid name
+            name_height = 20;
+            dna_gap = genRatioVal(($(id).width()), 2500, 3, 6);
+            //for minimal enzyme lable-line gap
+            label_line_gap = genRatioVal(($(id).width()), 2500, 15, 10);
+            arrow_parameter = genRatioVal(($(id).width()), 2500, 1, 4);
+            //draw empty svg
+            var svg = drawSVG(id, width, l_padding);
+            //draw linear map
+            drawLinearPlasmid(svg, width, name, t_padding, l_enzy, l_padding, name_height, dna_gap);
+            //draw enzymes
+            drawLinearEnzyme(id, svg, enzymes, cuts_number, sequence.length, width, t_padding, l_enzy, l_padding, lable_line_length, text_line_distance, label_line_gap, cut_length, dna_gap, selectEnzyme);
+            //draw markers
+            drawLinearCount(sequence.length, width, t_padding, l_enzy, l_padding, dna_gap, cut_length);
+            //draw features
+            drawLinearFeature(svg, features, sequence.length, width, t_padding, l_enzy, l_padding, arrow_parameter, dna_gap, cut_length, sequence, feature_gap, featureWidth, form);
         }
     }
 
