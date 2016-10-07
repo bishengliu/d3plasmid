@@ -661,7 +661,6 @@
                         lineLength = lable_line_length;
                     }
                 }
-
                 //mouse events
             enzy.on("mouseover", function(d){
                         //update select emzymes
@@ -761,8 +760,8 @@
                                     //get text class
                                     var textClass = "."+d.name.split(' ')[0] +"-text";
                                     d3.selectAll(textClass).style("fill", "blue").style("font", "14px Arial");
-                                })
-                            .on("mouseout", function(d){
+                        })
+                        .on("mouseout", function(d){
                                         //get the line class
                                     var cutClass = "."+ d.name.split(' ')[0] +"-cut";
                                     d3.selectAll(cutClass).attr("stroke", "#8c564b").attr("stroke-opacity", .5);
@@ -772,7 +771,7 @@
                                     //get text class
                                     var textClass = "."+d.name.split(' ')[0] +"-text";
                                     d3.selectAll(textClass).style("fill", "gray").style("font", "10px Arial");
-                                    });    
+                        });    
                     });
                 };                
             });
@@ -1066,7 +1065,8 @@
         features.forEach(function(d, i){
             temaFeatures.push(d);
         });
-        var featureRects = d3.select("#backbone").append('g').attr("id", "features").attr("transform", "translate(" + (0) + "," + (cut_length/2) + ")");
+        // var featureRects = d3.select("#backbone").append('g').attr("id", "features").attr("transform", "translate(" + (0) + "," + (cut_length/2) + ")");
+        var featureRects = d3.select("#enzyme").append('g').attr("id", "features").attr("transform", "translate(" + (0) + "," + (cut_length/2) + ")");
         var fLines = formatFeatures(temaFeatures);
         var margin = feature_gap; //gap between feature lines
         var pName_height = margin; //ajust the plasmid name height
