@@ -225,15 +225,15 @@
    var dp = new Plasmid();
    dp.read(data);
    //draw the circular map
-   //dp.draw();
+   dp.draw();
    //draw the linear map
-   dp.drawLinear();
+   //dp.drawLinear();
 
     //redraw svg when resize the window
     $(window).resize(function (){
         //draw the circular map
-        //dp.redraw();
+        dp.redraw();
         //draw the linear map
-        dp.redrawLinear();
+        //dp.redrawLinear();
     });
 </script>

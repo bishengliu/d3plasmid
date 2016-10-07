@@ -1042,6 +1042,15 @@
                      .on("click", function(d){
                          $(form).empty();
                          displayForm(form, d);
+                         //validate form
+                        $("#save-feature").click(function(e){
+                            var name = $("#feature-name").val();                            
+                            if(name == null || name == ''){
+                                $("#feature-name-msg").text("Required");
+                                return false;
+                            }                            
+                            return true;
+                        });
                          $("#close-feature-form").click(function(e){
                              event.preventDefault();
                              $(this).parent().parent().parent().slideUp();
@@ -1203,7 +1212,7 @@
                      .on("click", function(d){
                          $(form).empty();
                          displayForm(form, d);
-                         //validate form
+                        //validate form
                         $("#save-feature").click(function(e){
                             var name = $("#feature-name").val();                            
                             if(name == null || name == ''){
@@ -1211,8 +1220,8 @@
                                 return false;
                             }                            
                             return true;
-                        })
-
+                        });
+                        //dismiss form
                          $("#close-feature-form").click(function(e){
                              event.preventDefault();
                              $(this).parent().parent().parent().slideUp();
