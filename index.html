@@ -17,46 +17,48 @@
       <div class="container-fluid">
         <div id="plasmid" class="col-xs-12 col-sm-12 col-md-10 col-lg-10"></div>
         <div id="featureAdd" class="col-xs-12 col-sm-12 col-md-2 col-lg-2 hidden">
-          <!--<div class="pull-right"><button type="button" class="btn btn-danger"><span class="glyphicon glyphicon-plus"></span> Feature</button></div>-->
           <br/>
           <br/>
             <div class="panel panel-primary" id="add-feature-form">
-              <div class="panel-heading"></div>
+              <div class="panel-heading">
+                Add Feature
+                <div class="col-xs-2 pull-right"><button type="button" class="btn btn-xs btn-danger" id="close-add-feature-form">X</button></div>
+              </div>
               <div class="panel-body">
                 <form method="POST" action="#" id="add-feature-form">
-                    <div class="form-group">
-                        <label for="add-feature-name" class="col-xs-12 col-form-label">Name</label>
+                    <div class="form-group required">
+                        <label for="add-feature-name" class="col-xs-8 control-label">Name</label><span class="text-danger col-xs-4" id="add-feature-name-msg"></span>
                         <div class="col-xs-12">
                           <input class="form-control" type="text" value="" id="add-feature-name">
                         </div>
                     </div>
-                    <div class="form-group">
-                        <label for="add-feature-start" class="col-xs-12 col-form-label">Start</label>
+                    <div class="form-group required">
+                        <label for="add-feature-start" class="col-xs-8 control-label">Start</label><span class="text-danger col-xs-4" id="add-feature-start-msg"></span>
                         <div class="col-xs-12">
                           <input class="form-control" type="number" value="" id="add-feature-start">
                         </div>
                     </div>
-                    <div class="form-group">
-                        <label for="add-feature-end" class="col-xs-12 col-form-label">End</label>
+                    <div class="form-group required">
+                        <label for="add-feature-end" class="col-xs-8 control-label">End</label><span class="text-danger col-xs-4" id="add-feature-end-msg"></span>
                         <div class="col-xs-12">
                           <input class="form-control" type="number" value="" id="add-feature-end">
                         </div>
                     </div>
                     <div class="form-group">
-                        <label for="add-feature-color" class="col-xs-12 col-form-label">Color</label>
+                        <label for="add-feature-color" class="col-xs-12 control-label">Color</label>
                         <div class="col-xs-12">
                         <input class="form-control" type="color" value="#bdbdbd" id="add-feature-color">
                         </div>
                     </div>
                     <div class="form-group">
-                        <label for="add-feature-direction" class="col-xs-12 col-form-label">Direction</label>
+                        <label for="add-feature-direction" class="col-xs-12 control-label">Direction</label>
                         <div class="col-xs-12">
                         <input class="form-control" type="" value="" id="add-feature-direction">
                         </div>
                     </div>
                     <div class="form-group pull-right">
                       <div class="col-xs-12">
-                        <button type="submit" class="btn btn-primary">Add Feature</button>
+                        <button type="submit" class="btn btn-primary" id="add-feature-button">Add Feature</button>
                       </div>
                     </div>
                 </form>
@@ -206,16 +208,17 @@
             {"pId":6,"name":"FspBI (BfaI)","start":6503,"end":6506,"cut":6503,"clockwise":true,"methylation":false}
     ];
 
-
+    //configure data for the api
     var data = {
                     id: "#plasmid", //id of the plasmid div
                     form: "#featureEdit", //form id for edit feature
-                    name: name,
+                    addFeatureId : "#featureAdd", //form id for adding feature
+                    name: name, //plasmid name
                     sequence: sequence, //sequence
-                    features: features, //feature array
-                    showEnzyme: true,
-                    enzymes: enzymes,
-                    cuts_number : -1
+                    features: features, //all features
+                    showEnzyme: true, //whether to show enzyme cuts on the map
+                    enzymes: enzymes, //all enzymes
+                    cuts_number : -1 //-1 show all cuts, change to any number to show the enzymes that have the number of cuts. It doesn't accept an array                    
    };
 
    //draw the plasmid

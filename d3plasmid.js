@@ -65,6 +65,7 @@
             showEnzyme = json.showEnzyme;
             enzymes = json.enzymes;
             cuts_number = json.cuts_number;
+            addFeatureId = json.addFeatureId;
 
             //sort data
             features.sort(sortByProperty('start'));
@@ -167,7 +168,7 @@
             //draw empty svg
             var svg = drawSVG(id, width, l_padding);
             //draw linear map
-            drawLinearPlasmid(svg, width, name, t_padding, l_enzy, l_padding, name_height, dna_gap);
+            drawLinearPlasmid(svg, width, name, t_padding, l_enzy, l_padding, name_height, dna_gap, sequence.length, addFeatureId, sequence);
             //draw enzymes
             drawLinearEnzyme(id, svg, enzymes, cuts_number, sequence.length, width, t_padding, l_enzy, l_padding, lable_line_length, text_line_distance, label_line_gap, cut_length, dna_gap, selectEnzyme);
             //draw markers
@@ -201,7 +202,7 @@
             //draw empty svg
             var svg = drawSVG(id, width, l_padding);
             //draw linear map
-            drawLinearPlasmid(svg, width, name, t_padding, l_enzy, l_padding, name_height, dna_gap);
+            drawLinearPlasmid(svg, width, name, t_padding, l_enzy, l_padding, name_height, dna_gap, sequence.length, addFeatureId, sequence);
             //draw enzymes
             drawLinearEnzyme(id, svg, enzymes, cuts_number, sequence.length, width, t_padding, l_enzy, l_padding, lable_line_length, text_line_distance, label_line_gap, cut_length, dna_gap, selectEnzyme);
             //draw markers
@@ -265,11 +266,84 @@
     }
 
     //draw linear plasmid backbone
-    function drawLinearPlasmid(svg, width, name, t_padding, l_enzy, l_padding, name_height, dna_gap){
+    function drawLinearPlasmid(svg, width, name, t_padding, l_enzy, l_padding, name_height, dna_gap, totalLength, addFeatureId, sequence){
+        //add tooltips for brush 
+        d3.selectAll(".brushTooltip").remove();
+        var brushTooltip1 = d3.select("body").append("div").attr("class", "brushTooltip").style("opacity", 0);
+        var brushTooltip2 = d3.select("body").append("div").attr("class", "brushTooltip").style("opacity", 0);
+
         var backbone = svg.append('g').attr("transform", "translate(" + (0) + "," + (t_padding + l_enzy) + ")").attr("id", "backbone");
             //draw lines for dna backbone
             //first line
             var plasmid = backbone.append("g");
+            //brush
+            var brush = d3.brushX()
+                        .extent([[0, -4*dna_gap], [width, 8*dna_gap]])
+                        .on("start brush", brushing)
+                        .on("end", brushed);
+
+            function brushing(){
+                //hide the add feature form
+                $("#featureAdd").addClass("hidden");
+                $("#add-feature-name-msg").text(null);
+                $("#add-feature-start-msg").text(null);
+                $("#add-feature-end-msg").text(null);
+            }
+            function brushed(){               
+                console.log(d3.event);
+                // d3.event.sourceEvent.stopPropagation()
+                var start = d3.event.selection[0];
+                var end = d3.event.selection[1];
+                if(end-start > 0){
+                    var coordinates = [d3.event.sourceEvent.pageX, d3.event.sourceEvent.pageY];
+                    //tooltiptool
+                    //get the seq positions
+                    var startPos =Math.round(width2Position(start, width, totalLength)) + 1;
+                    var endPos = Math.round(width2Position(end, width, totalLength));
+                    //get the subsequence and format substring
+                         var subSeq = formatSeq(sequence.substr(startPos, end-start), ' ', 40);
+                         var subSeqString = convert2String(subSeq);
+                    brushTooltip1.html("<p class='text-center'><span class='text-primary'>" + startPos + "-->" + endPos +"</span></p><p class='seqFont'>"+ subSeqString +'</p>')
+                       .style("left", (coordinates[0] + 28) + "px")
+                       .style("top", (coordinates[1] - 28) + "px");
+                    brushTooltip1.transition()
+                            .duration(200)
+                            .style("opacity", .9);
+                    //auto hide the tooltip
+                    setTimeout(function(){
+                        d3.selectAll(".brushTooltip").style("opacity", 0);
+                    }, 5000);
+                    //show the add feature form
+                    $("#close-add-feature-form").click(function(e){
+                        event.preventDefault();
+                        $(this).parent().parent().parent().parent().addClass("hidden");
+                    });
+                    //bind the data
+                    $("#add-feature-start").val(startPos);
+                    $("#add-feature-end").val(endPos);
+                    $(addFeatureId).removeClass("hidden");
+
+                    //validate form
+                    $("#add-feature-button").click(function(e){
+                        var name = $("#add-feature-name").val();
+                        var start = $("#add-feature-start").val();
+                        var end = $("#add-feature-end").val();
+                        if(name == null || name == ''){
+                            $("#add-feature-name-msg").text("Required");
+                            return false;
+                        }
+                        if(start == null || start == ''){
+                            $("#add-feature-start-msg").text("Required");
+                            return false;
+                        }
+                        if(end == null || end == ''){
+                            $("#add-feature-end-msg").text("Required");
+                            return false;
+                        }
+                        return true;
+                    })
+                }
+            }
             plasmid.append("line")
                     .style("stroke", "#9ecae1")
                     .attr("x1", 0 - dna_gap)
@@ -283,7 +357,9 @@
                     .attr("y1", 0 + dna_gap)
                     .attr("x2", width + dna_gap)
                     .attr("y2", 0 + dna_gap);
-
+            backbone
+                    .attr("class", "brush").
+                    call(brush);
             //plasmid label
             backbone.append("text")
                     .attr("transform", "translate(" + (width/2) + "," + (3*name_height) + ")")
@@ -1089,7 +1165,7 @@
                                 else{
                                     return truncate(d.name, 5, '...');
                                 }
-                            })
+                    })
                      //mouse events
                      featureG
                      .on("mouseover", function(d){
@@ -1146,6 +1222,7 @@
         d3.select("#pName").attr("transform", "translate(" + (width/2) + "," + (pName_height + 50) + ")");
         
     }
+
     //generate complementary sequence
     function genCSeq(sequence){
         var cSequence ="";
@@ -1467,4 +1544,9 @@
     //for linear map, convert cut position to the length
     function pos2Length(pos, totalLength, width){
         return pos/totalLength * width;
+    }
+
+    //for linear map, convert length to sequence position
+    function width2Position(currentWidth, width, totalLength){
+        return currentWidth /width * totalLength;
     }
