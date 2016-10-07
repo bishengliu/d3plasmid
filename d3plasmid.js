@@ -1,5 +1,5 @@
 
-    //this is the js API for draw plasmid using d3, version 1.0.0, 2016-10-07. author: Bisheng Liu, bishengliu@gmail.com
+    //this is the js API for drawing the plasmid map using d3, version 1.0.0, 2016-10-07. author: Bisheng Liu, bishengliu@gmail.com
     //howto
     /*
         //configure data for the api
